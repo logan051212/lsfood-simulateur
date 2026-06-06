@@ -78,25 +78,6 @@ body.admin-mode .admin-only-btn{display:block;}
   margin-bottom: 1rem;
   line-height: 1.4;
 }
-.card {
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,.08);
-}
-.qty-input {
-  font-size: 14px;
-}
-.sim-note {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  text-align: center;
-  margin-top: 10px;
-  line-height: 1.4;
-}
-
-
 .rp-form {
   background: var(--color-background-primary);
   border: 0.5px solid var(--color-border-tertiary);
@@ -124,11 +105,18 @@ body.admin-mode .admin-only-btn{display:block;}
   color: var(--color-text-primary);
   font-size: 13px;
 }
+.sim-note {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.4;
+}
 
 </style>
 
 <div class="app">
-  <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Système de panier produits</h2>
+  <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Système de panier ingrédients</h2>
   <p class="title">🍔 Simulateur de commande LS Food</p>
   <p class="sub">Composez votre demande et obtenez une estimation instantanée</p>
   <div class="client-info">
@@ -143,7 +131,6 @@ body.admin-mode .admin-only-btn{display:block;}
       <input type="text" id="rp-phone" placeholder="Téléphone RP">
     </div>
   </div>
-
 
   <div class="tabs">
     <div class="tab active" id="tab-shop" onclick="switchTab('shop')">📦 Catalogue</div>
@@ -497,13 +484,13 @@ function editItem(name){
 function addItem(){
   if(!isAdmin) return alert("Connecte-toi en admin d'abord.");
 
-  const name = prompt("Nom du nouvel produit :");
+  const name = prompt("Nom du nouvel ingrédient :");
   if(name === null) return;
   const cleanName = name.trim();
   if(!cleanName) return alert("Nom invalide.");
 
   if(items.some(i => i.name.toLowerCase() === cleanName.toLowerCase())){
-    return alert("Cet produit existe déjà.");
+    return alert("Cet ingrédient existe déjà.");
   }
 
   const priceText = prompt("Prix d'achat :");
@@ -536,7 +523,7 @@ function deleteItem(name){
   if(!isAdmin) return alert("Connecte-toi en admin d'abord.");
   const item = items.find(i => i.name === name);
   if(!item) return;
-  if(!confirm("Supprimer l'produit : " + item.name + " ?")) return;
+  if(!confirm("Supprimer l'ingrédient : " + item.name + " ?")) return;
 
   const index = items.indexOf(item);
   items.splice(index, 1);
@@ -620,7 +607,7 @@ function changeQty(name, delta) {
 function renderShop() {
   const q = document.getElementById("search").value.toLowerCase();
   const filtered = items.filter(i => (activeCat === "Tous" || i.cat === activeCat) && i.name.toLowerCase().includes(q));
-  document.getElementById("count-bar").textContent = filtered.length + " produit" + (filtered.length > 1 ? "s" : "");
+  document.getElementById("count-bar").textContent = filtered.length + " ingrédient" + (filtered.length > 1 ? "s" : "");
   const grid = document.getElementById("grid");
   if (!filtered.length) { grid.innerHTML = '<p class="empty-state">Aucun résultat</p>'; return; }
   grid.innerHTML = filtered.map(i => {
@@ -692,16 +679,15 @@ function renderPanier() {
       ${rows}
     </div>
     <div class="summary-box">
-      <div class="summary-row"><span>Coût total produits</span><span style="color:var(--color-text-primary);font-weight:500">${totalAchat.toFixed(2)}$</span></div>
-      <div class="summary-row marge"><span>Frais de service inclus</span><span>+${marge.toFixed(2)}$</span></div>
+      <div class="summary-row"><span>Sous-total</span><span style="color:var(--color-text-primary);font-weight:500">${totalAchat.toFixed(2)}$</span></div>
+      <div class="summary-row marge"><span>Marge +30%</span><span>+${marge.toFixed(2)}$</span></div>
       <div class="summary-row divider total-achat"><span>Total HT estimé</span><span>${totalAchat.toFixed(2)}$</span></div>
       <div class="summary-row total-client"><span>💰 Total estimé client</span><span>${totalClient.toFixed(2)}$</span></div>
       <button class="clear-btn" onclick="copySimulation()" style="border-color:var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);">📋 Copier la commande</button>
       <button class="clear-btn" onclick="clearCart()">🗑️ Réinitialiser la simulation</button>
-      <p class="sim-note">Estimation indicative. Le prix final peut varier selon disponibilité, livraison et demande spécifique.</p>
+      <p class="sim-note">Commande à coller dans votre ticket Discord LS Food. Estimation indicative.</p>
     </div>`;
 }
-
 
 
 function copySimulation() {
@@ -731,8 +717,7 @@ function copySimulation() {
 📞 Téléphone RP : ${rpPhone}
 
 📦 Articles demandés :
-${lines.join("
-")}
+${lines.join("\n")}
 
 💰 Total estimé : ${totalClient.toFixed(2)}$
 
@@ -742,7 +727,6 @@ ${lines.join("
     .then(() => alert("Commande copiée. Vous pouvez maintenant la coller dans votre ticket Discord."))
     .catch(() => alert(message));
 }
-
 
 function clearCart() {
   Object.keys(cart).forEach(k => delete cart[k]);
