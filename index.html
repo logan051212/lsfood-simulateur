@@ -1,0 +1,1759 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0d0d0d">
+  <title>LS Food - TEST V12</title>
+  <link rel="icon" type="image/png" href="lsfood_logo.png">
+</head>
+<body>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.app { padding: 1rem 0; font-family: var(--font-sans); max-width: 680px; margin: 0 auto; }
+.title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); text-align: center; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--color-text-secondary); text-align: center; margin-bottom: 1rem; }
+.tabs { display: flex; gap: 8px; margin-bottom: 1rem; }
+.tab { flex: 1; padding: 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; text-align: center; }
+.tab.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.search-wrap { display: flex; gap: 8px; margin-bottom: 0.75rem; }
+.search-wrap input { flex: 1; }
+.filter-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.75rem; }
+.filter-btn { font-size: 11px; padding: 3px 9px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; }
+.filter-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 10px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+.card.in-cart { border-color: #1D9E75; }
+.card .emoji { font-size: 24px; line-height: 1; margin-top: 16px; }
+.card .name { font-size: 11px; font-weight: 500; color: var(--color-text-primary); text-align: center; line-height: 1.3; }
+.card .cat-label { font-size: 10px; color: var(--color-text-tertiary); }
+.badges { position: absolute; top: 6px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 5px; }
+.badge-achat { font-size: 9px; font-weight: 500; background: #1D9E75; color: #fff; border-radius: 4px; padding: 2px 4px; }
+.badge-client { font-size: 9px; font-weight: 500; background: #D85A30; color: #fff; border-radius: 4px; padding: 2px 4px; }
+.qty-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.qty-btn { width: 24px; height: 24px; border-radius: 50%; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.qty-btn:hover { background: var(--color-background-tertiary); }
+.qty-input{width:60px;padding:4px;text-align:center;border:1px solid #ccc;border-radius:4px;}
+.admin-edit-btn{display:none;margin-top:4px;font-size:11px;padding:3px 6px;border-radius:4px;border:1px solid #ccc;background:var(--color-background-secondary);cursor:pointer;}
+body.admin-mode .admin-edit-btn{display:inline-block;}
+.admin-only-btn{display:none;}
+body.admin-mode .admin-only-btn{display:block;}
+.qty-num { font-size: 13px; font-weight: 500; color: var(--color-text-primary); min-width: 20px; text-align: center; }
+.no-price { font-size: 10px; color: var(--color-text-tertiary); font-style: italic; margin-top: 4px; }
+.count-bar { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 0.75rem; }
+.panier-section { display: none; }
+.panier-section.show { display: block; }
+.shop-section { display: none; }
+.shop-section.show { display: block; }
+
+/* Panier items */
+.panier-item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+.panier-item:last-of-type { border-bottom: none; }
+.pi-emoji { font-size: 22px; text-align: center; }
+.pi-info { min-width: 0; }
+.pi-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-unit { font-size: 11px; color: var(--color-text-tertiary); }
+.pi-qty-ctrl { display: flex; align-items: center; gap: 6px; }
+.pi-prices { text-align: right; min-width: 70px; }
+.pi-achat { font-size: 13px; font-weight: 500; color: #1D9E75; }
+.pi-client { font-size: 11px; color: #D85A30; }
+
+/* Summary */
+.summary-box { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 16px; margin-top: 1rem; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 14px; color: var(--color-text-secondary); }
+.summary-row.divider { border-top: 0.5px solid var(--color-border-tertiary); margin-top: 6px; padding-top: 10px; }
+.summary-row.total-achat { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.summary-row.total-client { font-size: 18px; font-weight: 500; color: #D85A30; margin-top: 4px; }
+.summary-row.marge { font-size: 12px; color: var(--color-text-tertiary); }
+.clear-btn { width: 100%; margin-top: 14px; padding: 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-danger); background: var(--color-background-danger); color: var(--color-text-danger); font-size: 13px; cursor: pointer; }
+.empty-panier { text-align: center; padding: 3rem 1rem; color: var(--color-text-secondary); font-size: 14px; }
+.cart-badge { display: inline-block; background: #D85A30; color: #fff; border-radius: 10px; font-size: 10px; padding: 1px 6px; margin-left: 5px; font-weight: 500; }
+.empty-state { font-size: 14px; color: var(--color-text-secondary); text-align: center; padding: 2rem; grid-column: 1/-1; }
+
+.client-info {
+  background: linear-gradient(135deg, rgba(216,90,48,0.10), rgba(29,158,117,0.10));
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+.rp-form {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 12px;
+  margin-bottom: 1rem;
+}
+.rp-form-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+.rp-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.rp-fields input {
+  width: 100%;
+  padding: 9px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+.sim-note {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+
+:root {
+  --ls-gold: #d6a83a;
+  --ls-gold-light: #ffe7a3;
+  --ls-black: #111111;
+}
+
+body {
+  background: radial-gradient(circle at top, rgba(214,168,58,.18), transparent 38%), #fffdf8;
+}
+
+.app {
+  max-width: 980px !important;
+  padding: 1rem !important;
+}
+
+.ls-hero {
+  background: linear-gradient(135deg, #0d0d0d, #2b2114 65%, #111);
+  border: 1px solid rgba(214,168,58,.45);
+  border-radius: 22px;
+  padding: 20px 18px 18px;
+  margin-bottom: 16px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0,0,0,.18);
+  overflow: hidden;
+  position: relative;
+}
+
+.ls-logo {
+  width: min(440px, 92%);
+  max-height: 230px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.ls-hero h1 {
+  color: var(--ls-gold-light);
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 12px rgba(214,168,58,.4);
+}
+
+.ls-hero p {
+  color: #fff5d6;
+  font-size: 14px;
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1a1307 !important;
+}
+
+.sub {
+  color: #6b5a35 !important;
+}
+
+.client-info {
+  border-left: 5px solid var(--ls-gold) !important;
+  background: linear-gradient(135deg, rgba(214,168,58,.14), rgba(29,158,117,.08)) !important;
+}
+
+.tabs {
+  background: #16120d;
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.tab {
+  border: none !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: #fff0c2 !important;
+  padding: 12px 8px !important;
+}
+
+.tab.active {
+  background: linear-gradient(135deg, #b8861b, #f2d06b) !important;
+  color: #160f05 !important;
+  font-weight: 700 !important;
+}
+
+.search-wrap input,
+.rp-fields input,
+.qty-input {
+  border: 1px solid rgba(214,168,58,.35) !important;
+  background: #fffaf0 !important;
+}
+
+.card {
+  background: #fffaf0 !important;
+  border: 1px solid rgba(214,168,58,.25) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 5px 14px rgba(0,0,0,.05);
+}
+
+.card.in-cart {
+  border-color: var(--ls-gold) !important;
+  box-shadow: 0 8px 20px rgba(214,168,58,.18);
+}
+
+.badge-achat {
+  background: #17120b !important;
+  color: var(--ls-gold-light) !important;
+}
+
+.badge-client,
+.cart-badge {
+  background: linear-gradient(135deg, #b8861b, #f2d06b) !important;
+  color: #160f05 !important;
+}
+
+.summary-box {
+  background: linear-gradient(135deg, #16120d, #2a2114) !important;
+  color: #fff5d6 !important;
+  border: 1px solid rgba(214,168,58,.35);
+}
+
+.summary-row,
+.summary-row span,
+.sim-note {
+  color: #fff5d6 !important;
+}
+
+.summary-row.total-client {
+  color: var(--ls-gold-light) !important;
+  font-size: 21px !important;
+}
+
+.admin-edit-btn,
+.admin-only-btn,
+#admin-login-btn,
+#admin-logout-btn {
+  border-color: rgba(214,168,58,.45) !important;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 10px !important; }
+  .ls-hero { border-radius: 16px; padding: 14px 10px; }
+  .ls-logo { width: 96%; max-height: 150px; }
+  .ls-hero h1 { font-size: 19px; }
+  .ls-hero p { font-size: 12px; }
+  .title { font-size: 20px !important; }
+  .sub { font-size: 12px !important; }
+  .rp-fields { grid-template-columns: 1fr !important; }
+  .tabs { position: sticky; top: 0; z-index: 20; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .card { padding: 12px 8px 10px !important; }
+  .card .emoji { font-size: 28px !important; }
+  .card .name { font-size: 12px !important; }
+  .qty-input { width: 74px !important; padding: 8px !important; font-size: 16px !important; }
+  .panier-item { grid-template-columns: 32px 1fr !important; gap: 8px !important; }
+  .pi-qty-ctrl, .pi-prices { grid-column: 2; justify-self: start; }
+  .summary-box { position: sticky; bottom: 0; z-index: 30; border-radius: 16px 16px 0 0 !important; }
+}
+
+@media (max-width: 380px) {
+  .grid { grid-template-columns: 1fr !important; }
+}
+
+
+.theme-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,58,.55);
+  background: rgba(0,0,0,.45);
+  color: #ffe7a3;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+body.dark-mode {
+  background: radial-gradient(circle at top, rgba(214,168,58,.16), transparent 36%), #070707 !important;
+  color: #f7ecd0;
+}
+
+body.dark-mode .title,
+body.dark-mode .card .name,
+body.dark-mode .rp-form-title,
+body.dark-mode .pi-name {
+  color: #fff5d6 !important;
+}
+
+body.dark-mode .sub,
+body.dark-mode .client-info,
+body.dark-mode .cat-label,
+body.dark-mode .pi-unit,
+body.dark-mode .count-bar,
+body.dark-mode .no-price {
+  color: #d7c28c !important;
+}
+
+body.dark-mode .client-info,
+body.dark-mode .rp-form,
+body.dark-mode .card,
+body.dark-mode .panier-item,
+body.dark-mode #panier-list > div:first-child {
+  background: #15120d !important;
+  border-color: rgba(214,168,58,.35) !important;
+}
+
+body.dark-mode .search-wrap input,
+body.dark-mode .rp-fields input,
+body.dark-mode .qty-input {
+  background: #0f0d09 !important;
+  color: #fff5d6 !important;
+  border-color: rgba(214,168,58,.5) !important;
+}
+
+body.dark-mode .search-wrap input::placeholder,
+body.dark-mode .rp-fields input::placeholder {
+  color: #9f8b5c !important;
+}
+
+body.dark-mode .filter-btn {
+  background: #15120d !important;
+  color: #d7c28c !important;
+  border-color: rgba(214,168,58,.25) !important;
+}
+
+body.dark-mode .filter-btn.active {
+  background: linear-gradient(135deg, #b8861b, #f2d06b) !important;
+  color: #160f05 !important;
+  font-weight: 700 !important;
+}
+
+body.dark-mode .empty-panier,
+body.dark-mode .empty-state {
+  color: #d7c28c !important;
+}
+
+body.dark-mode #admin-login-btn,
+body.dark-mode #admin-logout-btn,
+body.dark-mode #admin-add-btn,
+body.dark-mode .admin-edit-btn {
+  background: #15120d !important;
+  color: #ffe7a3 !important;
+  border-color: rgba(214,168,58,.45) !important;
+}
+
+body.dark-mode .clear-btn {
+  background: #15120d !important;
+  color: #ffe7a3 !important;
+  border-color: rgba(214,168,58,.45) !important;
+}
+
+body.dark-mode .theme-toggle {
+  background: rgba(255,255,255,.10);
+  color: #fff5d6;
+}
+
+@media (max-width: 640px) {
+  .theme-toggle {
+    top: 10px;
+    right: 10px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+}
+
+
+/* V10 - Optimisation mobile + formulaire obligatoire */
+.rp-fields input.required-missing {
+  border-color: #ff4d4d !important;
+  box-shadow: 0 0 0 2px rgba(255,77,77,.18);
+}
+
+.mobile-copy-btn {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app {
+    max-width: 100% !important;
+    padding: 8px !important;
+  }
+
+  .ls-hero {
+    margin: 0 0 12px !important;
+    padding: 14px 10px 16px !important;
+  }
+
+  .ls-logo {
+    width: 88% !important;
+    max-height: 170px !important;
+  }
+
+  .theme-toggle {
+    position: static !important;
+    display: block;
+    margin-left: auto;
+    margin-bottom: 8px;
+    width: fit-content;
+  }
+
+  .client-info,
+  .rp-form {
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .rp-fields input {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .tabs {
+    margin-bottom: 10px !important;
+  }
+
+  .tab {
+    font-size: 13px !important;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #admin-login-btn,
+  #admin-logout-btn,
+  #admin-add-btn {
+    min-height: 42px;
+  }
+
+  .search-wrap input {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .filter-btns {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+
+  .filter-btn {
+    flex: 0 0 auto;
+    min-height: 34px;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+
+  .count-bar {
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .card {
+    min-height: 150px;
+    justify-content: space-between;
+  }
+
+  .card .emoji {
+    margin-top: 18px !important;
+  }
+
+  .badge-achat,
+  .badge-client {
+    font-size: 9px !important;
+  }
+
+  .qty-input {
+    width: 80px !important;
+    min-height: 38px;
+    font-size: 16px !important;
+  }
+
+  .admin-edit-btn {
+    min-height: 30px;
+    margin-top: 5px !important;
+  }
+
+  .panier-item {
+    grid-template-columns: 34px 1fr !important;
+    align-items: start !important;
+    padding: 14px 0 !important;
+  }
+
+  .pi-info {
+    min-width: 0;
+  }
+
+  .pi-name {
+    white-space: normal !important;
+    line-height: 1.25;
+  }
+
+  .pi-qty-ctrl,
+  .pi-prices {
+    grid-column: 2 !important;
+    justify-self: start !important;
+  }
+
+  .pi-prices {
+    text-align: left !important;
+  }
+
+  .summary-box {
+    margin-bottom: 0 !important;
+  }
+
+  .clear-btn {
+    min-height: 44px;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* V10.1 - Correction lisibilité téléphone */
+@media (max-width: 640px) {
+  body {
+    font-size: 16px !important;
+  }
+
+  .ls-hero {
+    padding: 18px 12px !important;
+  }
+
+  .ls-logo {
+    width: 92% !important;
+    max-height: 190px !important;
+  }
+
+  .ls-hero h1 {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+    margin-top: 8px !important;
+  }
+
+  .ls-hero p {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .theme-toggle {
+    font-size: 13px !important;
+    padding: 9px 12px !important;
+  }
+
+  .title {
+    font-size: 22px !important;
+    line-height: 1.25 !important;
+  }
+
+  .sub {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .client-info {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .rp-form-title {
+    font-size: 15px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .rp-fields input,
+  .search-wrap input {
+    font-size: 16px !important;
+    min-height: 48px !important;
+  }
+
+  .tab {
+    font-size: 15px !important;
+    min-height: 48px !important;
+  }
+
+  #admin-login-btn,
+  #admin-logout-btn,
+  #admin-add-btn {
+    font-size: 15px !important;
+    min-height: 46px !important;
+  }
+
+  .filter-btn {
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+    min-height: 38px !important;
+  }
+
+  .count-bar {
+    font-size: 14px !important;
+  }
+
+  .card {
+    min-height: 180px !important;
+    padding: 14px 10px 12px !important;
+  }
+
+  .card .emoji {
+    font-size: 34px !important;
+  }
+
+  .card .name {
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+  }
+
+  .card .cat-label {
+    font-size: 13px !important;
+  }
+
+  .badge-achat,
+  .badge-client {
+    font-size: 11px !important;
+    padding: 3px 5px !important;
+  }
+
+  .no-price {
+    font-size: 13px !important;
+  }
+
+  .qty-input {
+    width: 90px !important;
+    min-height: 42px !important;
+    font-size: 18px !important;
+  }
+
+  .admin-edit-btn {
+    font-size: 13px !important;
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+  }
+
+  .pi-name {
+    font-size: 15px !important;
+  }
+
+  .pi-unit {
+    font-size: 13px !important;
+  }
+
+  .pi-achat {
+    font-size: 15px !important;
+  }
+
+  .pi-client {
+    font-size: 13px !important;
+  }
+
+  .summary-row {
+    font-size: 15px !important;
+  }
+
+  .summary-row.total-client {
+    font-size: 22px !important;
+  }
+
+  .clear-btn {
+    font-size: 15px !important;
+    min-height: 48px !important;
+  }
+
+  .sim-note {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .ls-hero h1 {
+    font-size: 21px !important;
+  }
+
+  .title {
+    font-size: 20px !important;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* V10.2 - Correctif encodage + affichage téléphone */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .app {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    margin: 0 auto !important;
+  }
+
+  .ls-hero {
+    width: 100% !important;
+    min-height: auto !important;
+    margin: 0 0 14px 0 !important;
+  }
+
+  .ls-logo {
+    width: 90% !important;
+    max-width: 330px !important;
+    max-height: 170px !important;
+    display: block;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .card {
+    min-width: 0 !important;
+  }
+
+  .filter-btns {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+  }
+}
+
+
+/* V11 - Envoi Discord */
+.discord-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(214,168,58,.55);
+  background: linear-gradient(135deg, #5865F2, #404EED);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.discord-btn:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.send-status {
+  margin-top: 10px;
+  font-size: 12px;
+  text-align: center;
+  color: #fff5d6;
+}
+
+@media (max-width: 640px) {
+  .discord-btn {
+    min-height: 48px;
+    font-size: 15px !important;
+  }
+}
+
+</style>
+
+<div class="app">
+  <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Système de panier ingrédients</h2>
+  <header class="ls-hero">
+    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙 Mode sombre</button>
+    <img class="ls-logo" src="lsfood_logo.png" alt="Logo LS Food">
+    <h1>LS FOOD - GROSSISTE</h1>
+    <p>Ensemble, nourrissons la ville.</p>
+  </header>
+  <p class="title">🍔 Simulateur de commande LS Food</p>
+  <p class="sub">Composez votre demande et obtenez une estimation instantanée</p>
+  <div class="client-info">
+    <strong>Comment ça marche ?</strong><br>
+    Choisissez vos produits, indiquez les quantités souhaitées, puis consultez directement le total estimé dans votre simulation.
+  </div>
+  <div class="rp-form">
+    <div class="rp-form-title">📝 Informations pour la commande RP</div>
+    <div class="rp-fields">
+      <input type="text" id="rp-name" placeholder="Nom RP *">
+      <input type="text" id="rp-company" placeholder="Entreprise / Organisation *">
+      <input type="text" id="rp-phone" placeholder="Téléphone RP">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-shop" onclick="switchTab('shop')">📦 Catalogue</div>
+    <div class="tab" id="tab-panier" onclick="switchTab('panier')">🧾 Simulation <span class="cart-badge" id="cart-count">0</span></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+    <button id="admin-login-btn" onclick="adminLogin()" style="flex:1;min-width:160px;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;">🔐 Espace LS Food</button>
+    <button id="admin-logout-btn" onclick="adminLogout()" style="display:none;flex:1;min-width:160px;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;">🚪 Déconnexion admin</button>
+    <button id="admin-add-btn" class="admin-only-btn" onclick="addItem()" style="flex:1;min-width:160px;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;">➕ Ajouter un produit</button>
+  </div>
+
+  <div class="shop-section show" id="shop-section">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Rechercher un produit..." oninput="renderShop()">
+    </div>
+    <div class="filter-btns" id="filters"></div>
+    <p class="count-bar" id="count-bar"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="panier-section" id="panier-section">
+    <div id="panier-list"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const items = [
+  {name:"Citron Vert", price:null, cat:"Fruits"},
+  {name:"Menthe", price:null, cat:"Herbes"},
+  {name:"Oeufs", price:null, cat:"Produits laitiers"},
+  {name:"Beurre", price:null, cat:"Produits laitiers"},
+  {name:"Cheddar", price:4, cat:"Fromages"},
+  {name:"Huile", price:2, cat:"Épicerie"},
+  {name:"Sucre", price:1, cat:"Épicerie"},
+  {name:"Farine", price:1, cat:"Épicerie"},
+  {name:"Tomates", price:4, cat:"Légumes"},
+  {name:"Oignons", price:6, cat:"Légumes"},
+  {name:"Pommes de terre", price:4, cat:"Légumes"},
+  {name:"Carottes", price:3, cat:"Légumes"},
+  {name:"Lait", price:2, cat:"Produits laitiers"},
+  {name:"Haricot Vert", price:3, cat:"Légumes"},
+  {name:"Chocolat", price:7, cat:"Épicerie"},
+  {name:"Kiwi", price:2, cat:"Fruits"},
+  {name:"Orange", price:2, cat:"Fruits"},
+  {name:"Clémentine", price:2, cat:"Fruits"},
+  {name:"Groseille", price:2, cat:"Fruits"},
+  {name:"Fraise", price:2, cat:"Fruits"},
+  {name:"Levure Chimique", price:1, cat:"Épicerie"},
+  {name:"Sel", price:1, cat:"Épicerie"},
+  {name:"Poivre", price:1, cat:"Épicerie"},
+  {name:"Poivron", price:4, cat:"Légumes"},
+  {name:"Echalotte", price:4, cat:"Légumes"},
+  {name:"Ail", price:4, cat:"Légumes"},
+  {name:"Crème", price:4, cat:"Produits laitiers"},
+  {name:"Ciboulette", price:1, cat:"Herbes"},
+  {name:"Fromage en Cube", price:3, cat:"Fromages"},
+  {name:"Sauce Barbecue", price:null, cat:"Condiments"},
+  {name:"Bacon", price:5, cat:"Viandes"},
+  {name:"Chèvre", price:3, cat:"Fromages"},
+  {name:"Emmental", price:3, cat:"Fromages"},
+  {name:"Fruit de la Passion", price:2, cat:"Fruits"},
+  {name:"Fruit du Dragon", price:2, cat:"Fruits"},
+  {name:"Soja", price:1, cat:"Épicerie"},
+  {name:"Boisson Énergisante", price:3, cat:"Boissons"},
+  {name:"Framboise", price:2, cat:"Fruits"},
+  {name:"Pomme", price:2, cat:"Fruits"},
+  {name:"Poire", price:2, cat:"Fruits"},
+  {name:"Cassis", price:2, cat:"Fruits"},
+  {name:"Bouteille de Rhum", price:6, cat:"Alcools"},
+  {name:"Bouteille de Vodka", price:6, cat:"Alcools"},
+  {name:"Vanille", price:1, cat:"Épicerie"},
+  {name:"Mangue", price:2, cat:"Fruits"},
+  {name:"Avoine", price:1, cat:"Épicerie"},
+  {name:"Volaille", price:5, cat:"Viandes"},
+  {name:"Lardon", price:5, cat:"Viandes"},
+  {name:"Cacao", price:1, cat:"Épicerie"},
+  {name:"Céréale", price:2, cat:"Épicerie"},
+  {name:"Navet", price:3, cat:"Légumes"},
+  {name:"Poireau", price:3, cat:"Légumes"},
+  {name:"Endive", price:3, cat:"Légumes"},
+  {name:"Caramel", price:2, cat:"Épicerie"},
+  {name:"Raisin", price:2, cat:"Fruits"},
+  {name:"Orge", price:1, cat:"Épicerie"},
+  {name:"Pistache", price:3, cat:"Noix"},
+  {name:"Noix", price:2, cat:"Noix"},
+  {name:"Poischiche", price:3, cat:"Légumineuses"},
+  {name:"Citron", price:1, cat:"Fruits"},
+  {name:"Miel", price:5, cat:"Épicerie"},
+  {name:"Avocat", price:4, cat:"Fruits"},
+  {name:"Lentille", price:3, cat:"Légumineuses"},
+  {name:"Amande", price:3, cat:"Noix"},
+  {name:"Gingembre", price:1, cat:"Épicerie"},
+  {name:"Celeri", price:3, cat:"Légumes"},
+  {name:"Courgette", price:3, cat:"Légumes"},
+  {name:"Courge", price:3, cat:"Légumes"},
+  {name:"Fenouil", price:3, cat:"Légumes"},
+  {name:"Artichaut", price:3, cat:"Légumes"},
+  {name:"Champignon", price:5, cat:"Légumes"},
+  {name:"Radis", price:2, cat:"Légumes"},
+  {name:"Concombre", price:2, cat:"Légumes"},
+  {name:"Noix de Coco", price:3, cat:"Fruits"},
+  {name:"Cerise", price:1, cat:"Fruits"},
+  {name:"Patate douce", price:4, cat:"Légumes"},
+  {name:"Olive", price:4, cat:"Épicerie"},
+  {name:"Prune", price:2, cat:"Fruits"},
+  {name:"Mandarine", price:2, cat:"Fruits"},
+  {name:"Grenade", price:2, cat:"Fruits"},
+  {name:"Aubergine", price:3, cat:"Légumes"},
+  {name:"Farine Sarasin", price:1, cat:"Épicerie"},
+  {name:"Lavande", price:1, cat:"Herbes"},
+  {name:"Biscotte", price:1, cat:"Épicerie"},
+  {name:"Pateatartiner", price:5, cat:"Épicerie"},
+  {name:"Piment", price:3, cat:"Épices"},
+  {name:"Gruyere", price:4, cat:"Fromages"},
+  {name:"Cannelle", price:3, cat:"Épices"},
+  {name:"Petitpois", price:2, cat:"Légumes"},
+  {name:"Pasteque", price:3, cat:"Fruits"},
+  {name:"Melon", price:2, cat:"Fruits"},
+  {name:"Rhubarbe", price:3, cat:"Fruits"},
+  {name:"Kaki", price:2, cat:"Fruits"},
+  {name:"Papaye", price:2, cat:"Fruits"},
+  {name:"Semoule", price:3, cat:"Épicerie"},
+  {name:"Yaourt", price:4, cat:"Produits laitiers"},
+  {name:"Mascarpone", price:3, cat:"Fromages"},
+  {name:"Bouteille de vin blanc", price:8, cat:"Alcools"},
+  {name:"Thym", price:1, cat:"Herbes"},
+  {name:"Sauce tomate", price:3, cat:"Condiments"},
+  {name:"Concentré de tomate", price:3, cat:"Condiments"},
+  {name:"Persil", price:1, cat:"Herbes"},
+  {name:"Ananas", price:2, cat:"Fruits"},
+  {name:"Jambon", price:5, cat:"Viandes"},
+  {name:"Tabasco", price:2, cat:"Condiments"},
+  {name:"Ricotta", price:3, cat:"Fromages"},
+  {name:"Epinard", price:3, cat:"Légumes"},
+  {name:"Myrtille", price:2, cat:"Fruits"},
+  {name:"Moutarde", price:3, cat:"Condiments"},
+  {name:"Vinaigre", price:2, cat:"Condiments"},
+  {name:"Laurier", price:1, cat:"Herbes"},
+  {name:"Sirop de canne", price:3, cat:"Épicerie"},
+  {name:"Canette de Cola", price:4, cat:"Boissons"},
+  {name:"Lait concentré", price:2, cat:"Produits laitiers"},
+  {name:"Curry", price:1, cat:"Épices"},
+  {name:"Piment d'espelette", price:3, cat:"Épices"},
+  {name:"Muscade", price:2, cat:"Épices"},
+  {name:"Truffes", price:5, cat:"Champignons"},
+  {name:"Aneth", price:2, cat:"Herbes"},
+  {name:"Celeri rave", price:3, cat:"Légumes"},
+  {name:"Cornichons", price:3, cat:"Condiments"},
+  {name:"Haricots rouge", price:2, cat:"Légumineuses"},
+  {name:"Abricots", price:3, cat:"Fruits"},
+  {name:"Pêches", price:3, cat:"Fruits"},
+  {name:"Figues", price:3, cat:"Fruits"},
+  {name:"Litchis", price:3, cat:"Fruits"},
+  {name:"Bouteille de gin", price:6, cat:"Alcools"},
+  {name:"Oignons rouges", price:6, cat:"Légumes"},
+  {name:"Cacahuètes", price:3, cat:"Noix"},
+  {name:"Noix de cajou", price:3, cat:"Noix"},
+  {name:"Chips", price:2, cat:"Snacks"},
+  {name:"Fruits secs", price:3, cat:"Noix"},
+  {name:"Bouteille de Calvados", price:7, cat:"Alcools"},
+  {name:"Bouteille de champagne", price:13, cat:"Alcools"},
+  {name:"Bouteille de cognac", price:9, cat:"Alcools"},
+  {name:"Bouteille de Jager", price:9, cat:"Alcools"},
+  {name:"Blé", price:3, cat:"Épicerie"},
+  {name:"Riz", price:3, cat:"Épicerie"},
+  {name:"Mais", price:3, cat:"Épicerie"},
+  {name:"Wasabi", price:2, cat:"Condiments"},
+  {name:"Sauge", price:1, cat:"Herbes"},
+  {name:"Origan", price:1, cat:"Herbes"},
+  {name:"Romarin", price:1, cat:"Herbes"},
+  {name:"Glaçons", price:1, cat:"Autres"},
+  {name:"Agave", price:2, cat:"Épicerie"},
+  {name:"Hibiscus", price:1, cat:"Herbes"},
+  {name:"Eau pétillante", price:1, cat:"Boissons"},
+  {name:"Bouteille de Bourbon", price:10, cat:"Alcools"},
+  {name:"Bouteille de téquila", price:10, cat:"Alcools"},
+  {name:"Sauce aux poivres", price:5, cat:"Condiments"},
+  {name:"Épices", price:2, cat:"Épices"},
+  {name:"Tortilla", price:4, cat:"Épicerie"},
+  {name:"Eau", price:1, cat:"Boissons"},
+  {name:"Girofle", price:1, cat:"Épices"},
+  {name:"Chips de patate douce", price:2, cat:"Snacks"},
+  {name:"Coulis de fruits rouges", price:2, cat:"Épicerie"},
+  {name:"Noisette", price:3, cat:"Noix"},
+  {name:"Fromage frais", price:3, cat:"Fromages"},
+  {name:"Glace vanille", price:4, cat:"Épicerie"},
+  {name:"Huile de Sésame", price:2, cat:"Épicerie"},
+  {name:"Liqueur de pêche", price:5, cat:"Alcools"},
+  {name:"Meringue", price:3, cat:"Épicerie"},
+  {name:"Pétale cristallisée", price:1, cat:"Autres"},
+  {name:"Pate a pate", price:2, cat:"Épicerie"},
+  {name:"Spéculoos", price:2, cat:"Épicerie"},
+  {name:"Amaretto", price:6, cat:"Alcools"},
+  {name:"Expresso", price:3, cat:"Boissons"},
+  {name:"Fleur de sel", price:2, cat:"Épicerie"},
+  {name:"Jalapenos", price:3, cat:"Épices"},
+  {name:"Jus de tomate", price:3, cat:"Boissons"},
+  {name:"Liqueur de cerise", price:5, cat:"Alcools"},
+  {name:"Pain burger", price:3, cat:"Épicerie"},
+  {name:"Pain burger brioché", price:3, cat:"Épicerie"},
+  {name:"Pain hotdog", price:3, cat:"Épicerie"},
+  {name:"Prosecco", price:7, cat:"Alcools"},
+  {name:"Rhum noir", price:6, cat:"Alcools"},
+  {name:"Sirop de concombre", price:3, cat:"Épicerie"},
+  {name:"Tacos", price:2, cat:"Épicerie"},
+  {name:"Fleur de Jasmin", price:1, cat:"Herbes"},
+  {name:"Koji", price:3, cat:"Autres"},
+  {name:"Levure", price:1, cat:"Épicerie"},
+  {name:"Houblon", price:2, cat:"Autres"},
+  {name:"Saucisse", price:2, cat:"Viandes"},
+  {name:"Ketchup", price:3, cat:"Condiments"},
+  {name:"Mayonnaise", price:3, cat:"Condiments"},
+  {name:"Noix de cola", price:3, cat:"Autres"},
+  {name:"Guacamole", price:3, cat:"Condiments"},
+  {name:"Liqueur de café", price:2, cat:"Alcools"},
+  {name:"Coulis chocolat", price:2, cat:"Épicerie"},
+  {name:"Biscuit", price:2, cat:"Épicerie"},
+  {name:"Poulet", price:6, cat:"Viandes"},
+  {name:"Coriandre", price:1, cat:"Herbes"},
+  {name:"Arôme d'agrume", price:9, cat:"Autres"},
+  {name:"Liqueur de vanille", price:5, cat:"Alcools"},
+  {name:"Chantilly", price:3, cat:"Produits laitiers"},
+  {name:"Perles nacrées", price:2, cat:"Autres"},
+  {name:"Sirop de litchi", price:3, cat:"Épicerie"},
+  {name:"Billes de fruits", price:2, cat:"Autres"},
+  {name:"Mini guimauve", price:2, cat:"Épicerie"},
+  {name:"Glacage fraise", price:3, cat:"Épicerie"},
+  {name:"Sirop fruit de la passion", price:3, cat:"Épicerie"},
+  {name:"Malibu", price:6, cat:"Alcools"},
+  {name:"Jus d'ananas", price:4, cat:"Boissons"},
+  {name:"Pépite de chocolat", price:3, cat:"Épicerie"},
+  {name:"Algues wakame", price:3, cat:"Autres"},
+  {name:"Pate miso", price:3, cat:"Épicerie"},
+];
+
+// === SUPABASE CONFIG LS FOOD ===
+// Colle tes infos ici :
+const SUPABASE_URL = "https://snrddzlitmwlnwyzpodv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_CtMa-JlYloUo9kus5u_6fA_bF-NHfZz";
+const SUPABASE_TABLE = "items";
+
+let supabaseClient = null;
+
+function isSupabaseConfigured() {
+  return SUPABASE_URL.startsWith("https://") && SUPABASE_KEY.startsWith("sb_publishable_");
+}
+
+async function loadItemsFromSupabase() {
+  if (!isSupabaseConfigured()) {
+    console.warn("Supabase non configuré : utilisation de la liste locale.");
+    return false;
+  }
+
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_TABLE)
+     .select("identifiant,nom,catégorie,prix,emoji")
+.order("identifiant", { ascending: true });
+
+    if (error) throw error;
+    if (!Array.isArray(data) || data.length === 0) throw new Error("Aucun article trouvé dans Supabase.");
+
+    items.splice(0, items.length, ...data.map(row => ({
+      id: row.identifiant,
+name: row.nom,
+price: row.prix === null || row.prix === "" ? null : Number(row.prix),
+cat: row.catégorie || "Autres",
+emoji: row.emoji || ""
+    })));
+
+    console.log("Articles chargés depuis Supabase :", items.length);
+    return true;
+  } catch (err) {
+    console.error("Erreur chargement Supabase, retour liste locale :", err);
+    alert("Impossible de charger la base LS Food. La liste locale de secours est utilisée.");
+    return false;
+  }
+}
+
+async function saveItemToSupabase(item) {
+  if (!supabaseClient || !item.id) return false;
+
+  const { error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .update({
+      name: item.name,
+      category: item.cat,
+      price: item.price,
+      emoji: item.emoji || null
+    })
+    .eq("id", item.id);
+
+  if (error) {
+    console.error(error);
+    alert("Erreur Supabase : modification non sauvegardée en ligne.");
+    return false;
+  }
+
+  return true;
+}
+
+async function addItemToSupabase(item) {
+  if (!supabaseClient) return null;
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .insert({
+      name: item.name,
+      category: item.cat,
+      price: item.price,
+      emoji: item.emoji || null
+    })
+    .select("id,name,category,price,emoji")
+.order("id", { ascending: true })
+
+  if (error) {
+    console.error(error);
+    alert("Erreur Supabase : produit non ajouté en ligne.");
+    return null;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    price: data.price === null || data.price === "" ? null : Number(data.price),
+    cat: data.category || "Autres",
+    emoji: data.emoji || ""
+  };
+}
+
+async function deleteItemFromSupabase(item) {
+  if (!supabaseClient || !item.id) return false;
+
+  const { error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .delete()
+    .eq("id", item.id);
+
+  if (error) {
+    console.error(error);
+    alert("Erreur Supabase : produit non supprimé en ligne.");
+    return false;
+  }
+
+  return true;
+}
+
+
+const emojiMap = {
+  "Tomates":"🍅","Fraise":"🍓","Orange":"🍊","Citron":"🍋","Citron Vert":"🍋","Pomme":"🍎",
+  "Raisin":"🍇","Cerise":"🍒","Pêches":"🍑","Mangue":"🥭","Ananas":"🍍","Avocat":"🥑",
+  "Kiwi":"🥝","Melon":"🍈","Pasteque":"🍉","Myrtille":"🫐","Framboise":"🍓","Noix de Coco":"🥥",
+  "Prune":"🫐","Figues":"🫐","Grenade":"🍎","Oignons":"🧅","Ail":"🧄","Pommes de terre":"🥔",
+  "Carottes":"🥕","Aubergine":"🍆","Champignon":"🍄","Concombre":"🥒","Poivron":"🫑",
+  "Courgette":"🥒","Artichaut":"🥦","Epinard":"🥬","Celeri":"🥬","Mais":"🌽","Poireau":"🥬",
+  "Oeufs":"🥚","Beurre":"🧈","Lait":"🥛","Crème":"🫙","Chantilly":"🧁","Yaourt":"🥛",
+  "Chocolat":"🍫","Sucre":"🍬","Miel":"🍯","Cacao":"🍫","Caramel":"🍮",
+  "Farine":"🌾","Riz":"🍚","Blé":"🌾","Semoule":"🌾","Sel":"🧂","Vanille":"🫙",
+  "Menthe":"🌿","Thym":"🌿","Romarin":"🌿","Laurier":"🌿","Persil":"🌿",
+  "Coriandre":"🌿","Aneth":"🌿","Sauge":"🌿","Origan":"🌿","Lavande":"💜",
+  "Eau":"💧","Eau pétillante":"💧","Glaçons":"🧊","Lait concentré":"🥛",
+  "Bouteille de champagne":"🍾","Bouteille de Vodka":"🍶","Bouteille de Rhum":"🥃",
+  "Bouteille de Bourbon":"🥃","Bouteille de téquila":"🥃","Bouteille de gin":"🍸",
+  "Prosecco":"🍾","Amaretto":"🍷","Malibu":"🍹","Bouteille de vin blanc":"🍷",
+  "Bouteille de cognac":"🥃","Bouteille de Calvados":"🥃","Bouteille de Jager":"🥃",
+  "Noix":"🌰","Amande":"🌰","Pistache":"🌰","Cacahuètes":"🥜","Noix de cajou":"🥜",
+  "Noisette":"🌰","Chips":"🥔","Bacon":"🥓","Jambon":"🍖","Saucisse":"🌭","Poulet":"🍗",
+  "Lardon":"🥩","Volaille":"🍗","Pain burger":"🍔","Pain hotdog":"🌭","Tacos":"🌮",
+  "Tortilla":"🌮","Guacamole":"🥑","Ketchup":"🍅","Moutarde":"🫙","Mayonnaise":"🫙",
+  "Sauce tomate":"🍅","Tabasco":"🌶️","Wasabi":"🌿","Cornichons":"🥒",
+  "Fromage en Cube":"🧀","Cheddar":"🧀","Ricotta":"🧀","Mascarpone":"🧀",
+  "Gruyere":"🧀","Fromage frais":"🧀","Emmental":"🧀","Chèvre":"🧀",
+  "Glace vanille":"🍨","Meringue":"🧁","Spéculoos":"🍪","Biscuit":"🍪",
+  "Expresso":"☕","Jus d'ananas":"🍹","Jus de tomate":"🥤","Canette de Cola":"🥤",
+  "Boisson Énergisante":"⚡","Sirop de litchi":"🍹","Sirop de concombre":"🍹",
+  "Pépite de chocolat":"🍫","Coulis chocolat":"🍫","Coulis de fruits rouges":"🍓",
+  "Algues wakame":"🌿","Pate miso":"🫙","Houblon":"🌿","Hibiscus":"🌺",
+  "Fleur de Jasmin":"🌸","Pétale cristallisée":"🌸","Truffes":"🍄",
+};
+const catEmojis = {
+  "Fruits":"🍎","Légumes":"🥦","Fromages":"🧀","Épicerie":"🛒","Produits laitiers":"🥛",
+  "Herbes":"🌿","Viandes":"🥩","Boissons":"🥤","Alcools":"🍾","Épices":"🌶️",
+  "Noix":"🥜","Légumineuses":"🫘","Condiments":"🍯","Snacks":"🍿","Champignons":"🍄","Autres":"📦"
+};
+function emojiFor(item) { return item.emoji || emojiMap[item.name] || catEmojis[item.cat] || "🥄"; }
+function cp(p) { return (Math.round(p * 1.3 * 100) / 100).toFixed(2); }
+
+
+const ADMIN_PASSWORD_HASH = "661edc0299e0ea111e30e9abafa8041deaa27c180d33d172efe15886059aa3ea";
+let isAdmin = localStorage.getItem("lsfood_admin") === "true";
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function refreshAdminUI() {
+  document.body.classList.toggle("admin-mode", isAdmin);
+  const loginBtn = document.getElementById("admin-login-btn");
+  const logoutBtn = document.getElementById("admin-logout-btn");
+  if (loginBtn) loginBtn.style.display = isAdmin ? "none" : "block";
+  if (logoutBtn) logoutBtn.style.display = isAdmin ? "block" : "none";
+}
+
+async function adminLogin() {
+  const pwd = prompt("Mot de passe administrateur :");
+  if (!pwd) return;
+  const hash = await sha256(pwd);
+  if (hash !== ADMIN_PASSWORD_HASH) return alert("Accès refusé");
+
+  isAdmin = true;
+  localStorage.setItem("lsfood_admin", "true");
+  refreshAdminUI();
+  renderShop();
+  if (activeTab === "panier") renderPanier();
+}
+
+function adminLogout() {
+  isAdmin = false;
+  localStorage.removeItem("lsfood_admin");
+  refreshAdminUI();
+  renderShop();
+  if (activeTab === "panier") renderPanier();
+}
+
+function setQty(name, value) {
+  const qty = Math.max(0, parseInt(value) || 0);
+
+  if (qty === 0) delete cart[name];
+  else cart[name] = qty;
+
+  updateCartBadge();
+}
+
+async function editItem(name){
+  if(!isAdmin) return alert("Connecte-toi en admin d'abord.");
+
+  const item = items.find(i => i.name === name);
+  if(!item) return;
+
+  const oldName = item.name;
+  const newName = prompt("Nouveau nom :", item.name);
+  if(newName === null) return;
+
+  const newPrice = prompt("Nouveau prix :", item.price ?? "");
+  if(newPrice === null) return;
+
+  if(newName.trim()) item.name = newName.trim();
+  item.price = newPrice.trim() === "" ? null : Number(newPrice);
+
+  if(cart[oldName] && oldName !== item.name) {
+    cart[item.name] = cart[oldName];
+    delete cart[oldName];
+  }
+
+  if (supabaseClient && item.id) {
+    const ok = await saveItemToSupabase(item);
+    if (!ok) return;
+  } else {
+    saveItems();
+  }
+  renderShop();
+  if (activeTab === "panier") renderPanier();
+}
+
+
+async function addItem(){
+  if(!isAdmin) return alert("Connecte-toi en admin d'abord.");
+
+  const name = prompt("Nom du nouvel ingrédient :");
+  if(name === null) return;
+  const cleanName = name.trim();
+  if(!cleanName) return alert("Nom invalide.");
+
+  if(items.some(i => i.name.toLowerCase() === cleanName.toLowerCase())){
+    return alert("Cet ingrédient existe déjà.");
+  }
+
+  const priceText = prompt("Prix d'achat :");
+  if(priceText === null) return;
+  const cleanPrice = priceText.trim();
+  const price = cleanPrice === "" ? null : Number(cleanPrice.replace(",", "."));
+  if(cleanPrice !== "" && (Number.isNaN(price) || price < 0)){
+    return alert("Prix invalide.");
+  }
+
+  const existingCats = [...new Set(items.map(i => i.cat).sort())].join(", ");
+  const catText = prompt("Catégorie :\nExemples : " + existingCats, "Épicerie");
+  if(catText === null) return;
+  const cat = catText.trim() || "Autres";
+
+  const newItem = {name: cleanName, price: price, cat: cat, emoji: ""};
+
+  if (supabaseClient) {
+    const savedItem = await addItemToSupabase(newItem);
+    if (!savedItem) return;
+    items.push(savedItem);
+  } else {
+    items.push(newItem);
+    saveItems();
+  }
+
+  if(!cats.includes(cat)){
+    cats.push(cat);
+    cats.sort();
+    rebuildFilters();
+  }
+
+  renderShop();
+  alert("Ingrédient ajouté avec succès.");
+}
+
+async function deleteItem(name){
+  if(!isAdmin) return alert("Connecte-toi en admin d'abord.");
+  const item = items.find(i => i.name === name);
+  if(!item) return;
+  if(!confirm("Supprimer l'ingrédient : " + item.name + " ?")) return;
+
+  if (supabaseClient && item.id) {
+    const ok = await deleteItemFromSupabase(item);
+    if (!ok) return;
+  }
+
+  const index = items.indexOf(item);
+  items.splice(index, 1);
+  delete cart[name];
+
+  if (!supabaseClient) saveItems();
+  updateCartBadge();
+  rebuildFilters();
+  renderShop();
+  if(activeTab === "panier") renderPanier();
+}
+
+function saveItems() {
+  localStorage.setItem("lsfood_items", JSON.stringify(items));
+}
+
+function loadItems() {
+  const saved = localStorage.getItem("lsfood_items");
+  if (!saved) return;
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      items.splice(0, items.length, ...parsed);
+    }
+  } catch(e) {}
+}
+
+const cart = {};
+const cats = ["Tous"];
+let activeCat = "Tous";
+let activeTab = "shop";
+
+const filtersEl = document.getElementById("filters");
+
+function rebuildFilters() {
+  filtersEl.innerHTML = "";
+  const newCats = ["Tous", ...new Set(items.map(i => i.cat).sort())];
+  cats.splice(0, cats.length, ...newCats);
+  if(!cats.includes(activeCat)) activeCat = "Tous";
+
+  cats.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn" + (c === activeCat ? " active" : "");
+    btn.textContent = c;
+    btn.onclick = () => {
+      activeCat = c;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderShop();
+    };
+    filtersEl.appendChild(btn);
+  });
+}
+
+
+function switchTab(t) {
+  activeTab = t;
+  document.getElementById("tab-shop").className = "tab" + (t === "shop" ? " active" : "");
+  document.getElementById("tab-panier").className = "tab" + (t === "panier" ? " active" : "");
+  document.getElementById("shop-section").className = "shop-section" + (t === "shop" ? " show" : "");
+  document.getElementById("panier-section").className = "panier-section" + (t === "panier" ? " show" : "");
+  if (t === "panier") renderPanier();
+}
+
+function updateCartBadge() {
+  const total = Object.values(cart).reduce((s, v) => s + v, 0);
+  document.getElementById("cart-count").textContent = total;
+}
+
+function changeQty(name, delta) {
+  const item = items.find(i => i.name === name);
+  if (!item || item.price === null) return;
+  cart[name] = Math.max(0, (cart[name] || 0) + delta);
+  if (cart[name] === 0) delete cart[name];
+  updateCartBadge();
+  if (activeTab === "shop") renderShop();
+  else renderPanier();
+}
+
+function renderShop() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const filtered = items.filter(i => (activeCat === "Tous" || i.cat === activeCat) && i.name.toLowerCase().includes(q));
+  document.getElementById("count-bar").textContent = filtered.length + " ingrédient" + (filtered.length > 1 ? "s" : "");
+  const grid = document.getElementById("grid");
+  if (!filtered.length) { grid.innerHTML = '<p class="empty-state">Aucun résultat</p>'; return; }
+  grid.innerHTML = filtered.map(i => {
+    const qty = cart[i.name] || 0;
+    const inCart = qty > 0;
+    const hasPrice = i.price !== null;
+    const safeName = i.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return `<div class="card ${inCart ? 'in-cart' : ''}">
+      <div class="badges">
+        ${hasPrice ? `<span class="badge-achat">${i.price}$</span>` : '<span></span>'}
+        ${hasPrice ? `<span class="badge-client">${cp(i.price)}$</span>` : ''}
+      </div>
+      <span class="emoji">${emojiFor(i)}</span>
+      <span class="name">${i.name}</span>
+      <span class="cat-label">${i.cat}</span>
+      ${hasPrice
+        ? `<div class="qty-ctrl">
+            <input type="number" min="0" class="qty-input" value="${qty}" onblur="setQty('${safeName}',this.value)">
+          </div>
+          <div>
+            <button class="admin-edit-btn" onclick="editItem('${safeName}')">⚙️ Modifier</button>
+            <button class="admin-edit-btn" onclick="deleteItem('${safeName}')">🗑️ Supprimer</button>
+          </div>`
+        : `<span class="no-price">sur devis</span>
+          <div>
+            <button class="admin-edit-btn" onclick="editItem('${safeName}')">⚙️ Modifier</button>
+            <button class="admin-edit-btn" onclick="deleteItem('${safeName}')">🗑️ Supprimer</button>
+          </div>`}
+    </div>`;
+  }).join("");
+}
+
+function renderPanier() {
+  const keys = Object.keys(cart);
+  const el = document.getElementById("panier-list");
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-panier">🧺 Votre simulation est vide.<br><span style="font-size:12px;color:var(--color-text-tertiary)">Ajoutez des produits depuis le catalogue.</span></div>';
+    return;
+  }
+
+  let totalAchat = 0;
+  const rows = keys.map(name => {
+    const item = items.find(i => i.name === name);
+    const qty = cart[name];
+    const sous = item.price * qty;
+    totalAchat += sous;
+    const safeName = name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return `<div class="panier-item">
+      <span class="pi-emoji">${emojiFor(item)}</span>
+      <div class="pi-info">
+        <div class="pi-name">${item.name}</div>
+        <div class="pi-unit">${item.price}$ × ${qty}</div>
+      </div>
+      <div class="pi-qty-ctrl">
+        <input type="number" min="0" class="qty-input" value="${qty}" onblur="setQty('${safeName}',this.value)">
+      </div>
+      <div class="pi-prices">
+        <div class="pi-achat">${sous.toFixed(2)}$</div>
+        <div class="pi-client">→ ${(Math.round(sous*1.3*100)/100).toFixed(2)}$</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const totalClient = Math.round(totalAchat * 1.3 * 100) / 100;
+  const marge = Math.round((totalClient - totalAchat) * 100) / 100;
+
+  el.innerHTML = `
+    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:0 16px;">
+      ${rows}
+    </div>
+    <div class="summary-box">
+      <div class="summary-row"><span>Sous-total</span><span style="color:var(--color-text-primary);font-weight:500">${totalAchat.toFixed(2)}$</span></div>
+      <div class="summary-row marge"><span>Marge +30%</span><span>+${marge.toFixed(2)}$</span></div>
+      <div class="summary-row divider total-achat"><span>Total HT estimé</span><span>${totalAchat.toFixed(2)}$</span></div>
+      <div class="summary-row total-client"><span>💰 Total estimé client</span><span>${totalClient.toFixed(2)}$</span></div>
+      <button class="discord-btn" id="discord-send-btn" onclick="sendSimulationToDiscord()">📨 Envoyer la commande sur Discord</button>
+      <div class="send-status" id="send-status"></div>
+      <button class="clear-btn" onclick="copySimulation()" style="border-color:var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);">📋 Copier la commande</button>
+      <button class="clear-btn" onclick="clearCart()">🗑️ Réinitialiser la simulation</button>
+      <p class="sim-note">Commande à coller dans votre ticket Discord LS Food. Estimation indicative.</p>
+    </div>`;
+}
+
+
+
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1512955294446125197/vz87SeP4vGYabsA3hgSB2aVgt_VOV8JRKKLk66pweoe0_RqmC5KFEhHQHIqFSM0zrhpr";
+
+function getOrderDataForLSFood() {
+  const keys = Object.keys(cart);
+  if (!keys.length) {
+    alert("Votre simulation est vide.");
+    return null;
+  }
+
+  const rpNameEl = document.getElementById("rp-name");
+  const rpCompanyEl = document.getElementById("rp-company");
+  const rpPhoneEl = document.getElementById("rp-phone");
+
+  const rpName = (rpNameEl?.value || "").trim();
+  const rpCompany = (rpCompanyEl?.value || "").trim();
+  const rpPhone = (rpPhoneEl?.value || "").trim() || "Non renseigné";
+
+  rpNameEl?.classList.remove("required-missing");
+  rpCompanyEl?.classList.remove("required-missing");
+
+  if (!rpName) {
+    rpNameEl?.classList.add("required-missing");
+    alert("Merci d'indiquer votre Nom RP avant d'envoyer la commande.");
+    rpNameEl?.focus();
+    return null;
+  }
+
+  if (!rpCompany) {
+    rpCompanyEl?.classList.add("required-missing");
+    alert("Merci d'indiquer votre Entreprise / Organisation avant d'envoyer la commande.");
+    rpCompanyEl?.focus();
+    return null;
+  }
+
+  let totalAchat = 0;
+  const lines = keys.map(name => {
+    const item = items.find(i => i.name === name);
+    const qty = cart[name];
+    const sous = item.price * qty;
+    totalAchat += sous;
+    return `• ${item.name} x${qty} = ${(Math.round(sous*1.3*100)/100).toFixed(2)}$`;
+  });
+
+  const totalClient = Math.round(totalAchat * 1.3 * 100) / 100;
+
+  return {
+    rpName,
+    rpCompany,
+    rpPhone,
+    lines,
+    totalClient
+  };
+}
+
+async function sendSimulationToDiscord() {
+  const order = getOrderDataForLSFood();
+  if (!order) return;
+
+  const btn = document.getElementById("discord-send-btn");
+  const status = document.getElementById("send-status");
+  const oldText = btn ? btn.textContent : "";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ Envoi en cours...";
+  }
+  if (status) status.textContent = "";
+
+  const now = new Date();
+  const dateText = now.toLocaleString("fr-FR");
+
+  const payload = {
+    username: "LS Food Commandes",
+    content: "📦 Nouvelle commande LS Food",
+    embeds: [
+      {
+        title: "📦 NOUVELLE COMMANDE LS FOOD",
+        color: 14067770,
+        fields: [
+          { name: "👤 Nom RP", value: order.rpName || "Non renseigné", inline: true },
+          { name: "🏢 Entreprise / Organisation", value: order.rpCompany || "Non renseignée", inline: true },
+          { name: "📞 Téléphone RP", value: order.rpPhone || "Non renseigné", inline: true },
+          { name: "🛒 Produits commandés", value: order.lines.join("\n").slice(0, 1000) || "Aucun produit", inline: false },
+          { name: "💰 Total estimé", value: `${order.totalClient.toFixed(2)}$`, inline: true },
+          { name: "🕒 Date", value: dateText, inline: true }
+        ],
+        footer: {
+          text: "LS FOOD - Ensemble, nourrissons la ville."
+        }
+      }
+    ]
+  };
+
+  try {
+    const response = await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error("Erreur Discord " + response.status);
+
+    if (status) status.textContent = "✅ Commande envoyée sur Discord.";
+    alert("Commande envoyée sur Discord avec succès !");
+  } catch (error) {
+    console.error(error);
+    if (status) status.textContent = "❌ Envoi impossible. Utilisez le bouton copier.";
+    alert("Impossible d'envoyer la commande sur Discord. Utilisez le bouton Copier la commande.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = oldText || "📨 Envoyer la commande sur Discord";
+    }
+  }
+}
+
+
+function copySimulation() {
+  const keys = Object.keys(cart);
+  if (!keys.length) return alert("Votre simulation est vide.");
+
+  const rpNameEl = document.getElementById("rp-name");
+  const rpCompanyEl = document.getElementById("rp-company");
+  const rpPhoneEl = document.getElementById("rp-phone");
+
+  const rpName = (rpNameEl?.value || "").trim();
+  const rpCompany = (rpCompanyEl?.value || "").trim();
+  const rpPhone = (rpPhoneEl?.value || "").trim() || "Non renseigné";
+
+  rpNameEl?.classList.remove("required-missing");
+  rpCompanyEl?.classList.remove("required-missing");
+
+  if (!rpName) {
+    rpNameEl?.classList.add("required-missing");
+    alert("Merci d'indiquer votre Nom RP avant de copier la commande.");
+    rpNameEl?.focus();
+    return;
+  }
+
+  if (!rpCompany) {
+    rpCompanyEl?.classList.add("required-missing");
+    alert("Merci d'indiquer votre Entreprise / Organisation avant de copier la commande.");
+    rpCompanyEl?.focus();
+    return;
+  }
+
+  let totalAchat = 0;
+  const lines = keys.map(name => {
+    const item = items.find(i => i.name === name);
+    const qty = cart[name];
+    const sous = item.price * qty;
+    totalAchat += sous;
+    return `• ${item.name} x${qty} = ${(Math.round(sous*1.3*100)/100).toFixed(2)}$`;
+  });
+
+  const totalClient = Math.round(totalAchat * 1.3 * 100) / 100;
+
+  const message =
+`🍔 COMMANDE LS FOOD
+
+👤 Nom RP : ${rpName}
+🏢 Entreprise / Organisation : ${rpCompany}
+📞 Téléphone RP : ${rpPhone}
+
+📦 Articles demandés :
+${lines.join("\n")}
+
+💰 Total estimé : ${totalClient.toFixed(2)}$
+
+🚚 LS FOOD - Ensemble, nourrissons la ville.\n⚠️ Estimation indicative.`;
+
+  navigator.clipboard.writeText(message)
+    .then(() => alert("Commande copiée. Vous pouvez maintenant la coller dans votre ticket Discord."))
+    .catch(() => alert(message));
+}
+
+
+function applyTheme(theme) {
+  const isDark = theme === "dark";
+  document.body.classList.toggle("dark-mode", isDark);
+  const btn = document.getElementById("theme-toggle");
+  if (btn) btn.textContent = isDark ? "☀️ Mode clair" : "🌙 Mode sombre";
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem("lsfood_theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = current === "dark" ? "light" : "dark";
+  localStorage.setItem("lsfood_theme", next);
+  applyTheme(next);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem("lsfood_theme");
+  const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(saved || preferred);
+}
+
+
+function clearCart() {
+  Object.keys(cart).forEach(k => delete cart[k]);
+  updateCartBadge();
+  renderPanier();
+}
+
+async function initApp() {
+  initTheme();
+
+  const loadedOnline = await loadItemsFromSupabase();
+  if (!loadedOnline) {
+    loadItems();
+  }
+
+  rebuildFilters();
+  refreshAdminUI();
+  renderShop();
+}
+
+initApp();
+</script>
+
+</body>
+</html>
